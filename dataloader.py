@@ -30,7 +30,7 @@ def load_and_prepare_data():
 
     scaler = StandardScaler()
     
-    #normaliza os dados de TREINO
+    #normaliza os dados de treino
     scaler.fit(X_train)
     
     #transforma todos os conjuntos de dados com o mesmo normalizador
