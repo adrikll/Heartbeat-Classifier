@@ -30,11 +30,9 @@ def evaluate_and_compare_models(results, X_test, y_test):
             'Melhores Parâmetros': result['best_params']
         })
         
-    # Imprimir tabela de resumo
     summary_df = pd.DataFrame(summary)
     print("\n--- Resumo Comparativo dos Modelos ---")
     print(summary_df.to_string())
     
-    # Salvar resumo em CSV
     summary_df.to_csv(f"{config.OUTPUT_DIR}resumo_comparativo.csv", index=False)
     print(f"\nRelatório comparativo salvo em: {config.OUTPUT_DIR}resumo_comparativo.csv")
