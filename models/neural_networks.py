@@ -2,10 +2,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten, Reshape
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, BatchNormalization
 import config
+from tensorflow.keras import Input
 
 def create_mlp(meta):
+    
     model = Sequential([
-        Reshape((config.NN_INPUT_SHAPE[0],), input_shape=(config.NN_INPUT_SHAPE[0],)), # Achatando para MLP
+        Input(shape=(config.NN_INPUT_SHAPE[0],)),
+        Reshape((config.NN_INPUT_SHAPE[0],)),  
         Dense(128, activation='relu'),
         Dropout(0.3),
         Dense(64, activation='relu'),
@@ -16,8 +19,13 @@ def create_mlp(meta):
     return model
 
 def create_cnn(meta):
+    
     model = Sequential([
-        Reshape(config.NN_INPUT_SHAPE, input_shape=(config.NN_INPUT_SHAPE[0],)), # Garantindo formato 3D
+        
+        Input(shape=(config.NN_INPUT_SHAPE[0],)),
+        
+        Reshape(config.NN_INPUT_SHAPE),
+        
         Conv1D(filters=64, kernel_size=5, activation='relu', padding='same'),
         BatchNormalization(),
         MaxPooling1D(pool_size=2),
