@@ -1,6 +1,7 @@
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten, Reshape, Input, Conv1D, MaxPooling1D, BatchNormalization
 import config
+from tensorflow.keras import Input
 
 def create_mlp(optimizer='adam'):
     
