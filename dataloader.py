@@ -10,7 +10,6 @@ import config
 def load_and_prepare_data():
     """
     Carrega os dados e os divide em conjuntos de treino, validação e teste.
-    NÃO aplica mais balanceamento; isso será feito pelo 'class_weight' no treinamento.
     """
     print("Carregando datasets...")
     df_train_full = pd.read_csv(config.TRAIN_FILE, header=None)
@@ -21,7 +20,6 @@ def load_and_prepare_data():
     y_test = df_test.iloc[:, -1].values
 
     # Separar o dataframe de treino completo em um novo treino e um conjunto de validação
-    # Os dados retornados NÃO são balanceados.
     X_train, X_val, y_train, y_val = train_test_split(
         df_train_full.iloc[:, :-1],
         df_train_full.iloc[:, -1],
@@ -30,21 +28,18 @@ def load_and_prepare_data():
         stratify=df_train_full.iloc[:, -1]
     )
 
-    # 1. Crie uma instância do normalizador
     scaler = StandardScaler()
     
-    # 2. Ajuste o normalizador APENAS com os dados de TREINO
+    #normaliza os dados de TREINO
     scaler.fit(X_train)
     
-    # 3. Transforme (normalize) todos os conjuntos de dados com o mesmo normalizador
+    #transforma todos os conjuntos de dados com o mesmo normalizador
     X_train_scaled = scaler.transform(X_train)
     X_val_scaled = scaler.transform(X_val)
     X_test_scaled = scaler.transform(X_test)
-    
-    # ----------------------------
 
-    print(f"Tamanho do treino (original, não balanceado): {len(X_train_scaled)}")
+    print(f"Tamanho do treino: {len(X_train_scaled)}")
     print("Dados carregados, divididos e normalizados com sucesso.")
 
-    # Retorna os dados normalizados como arrays numpy
+    #retorna os dados normalizados como arrays numpy
     return (X_train_scaled, y_train.values), (X_val_scaled, y_val.values), (X_test_scaled, y_test)
