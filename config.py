@@ -1,21 +1,20 @@
-# --- Caminhos ---
+#caminhos
 DATA_DIR = 'dados/'
 TRAIN_FILE = DATA_DIR + 'mitbih_train.csv'
 TEST_FILE = DATA_DIR + 'mitbih_test.csv'
 OUTPUT_DIR = 'outputs/'
+BEST_PARAMS_FILE = OUTPUT_DIR + 'best_hyperparameters.json' 
 
-# --- Parâmetros de Processamento de Dados ---
-VALIDATION_SIZE = 0.2  # 20% do treino para validação
-RANDOM_STATE = 42      # Para reprodutibilidade
+#processamento de dados
+VALIDATION_SIZE = 0.2
+RANDOM_STATE = 42
 
-# --- Parâmetros de Otimização (Random Search) ---
-# Número de combinações de hiperparâmetros a serem testadas
+#otimização (random search)
 N_ITER_SEARCH = 15
-# Número de folds para validação cruzada dentro do search
 CV_FOLDS = 3
 
-# --- Parâmetros dos Modelos de Rede Neural ---
-NN_INPUT_SHAPE = (187, 1)
-NUM_CLASSES = 5
-NN_EPOCHS = 20
+#redes neurais
+NN_EPOCHS = 50
 NN_BATCH_SIZE = 128
+NN_INPUT_SHAPE = (187,)
+NUM_CLASSES = 5
