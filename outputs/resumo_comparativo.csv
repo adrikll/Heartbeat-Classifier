@@ -1,0 +1,5 @@
+Modelo,Acurácia Teste,Melhores Parâmetros
+RandomForest,0.973780376393203,"{'n_estimators': 300, 'min_samples_split': 10, 'max_depth': None}"
+XGBoost,0.9807235519824593,"{'n_estimators': 300, 'max_depth': 7, 'learning_rate': 0.1}"
+MLP,0.9058560204640965,"{'optimizer': 'rmsprop', 'epochs': 30, 'batch_size': 256}"
+CNN,0.935364516718436,"{'optimizer': 'rmsprop', 'epochs': 20, 'batch_size': 256}"

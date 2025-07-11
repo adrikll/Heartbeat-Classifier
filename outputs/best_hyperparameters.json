@@ -1,0 +1,22 @@
+{
+    "RandomForest": {
+        "n_estimators": 300,
+        "min_samples_split": 10,
+        "max_depth": null
+    },
+    "XGBoost": {
+        "n_estimators": 300,
+        "max_depth": 7,
+        "learning_rate": 0.1
+    },
+    "MLP": {
+        "optimizer": "adam",
+        "epochs": 30,
+        "batch_size": 64
+    },
+    "CNN": {
+        "optimizer": "rmsprop",
+        "epochs": 20,
+        "batch_size": 256
+    }
+}
