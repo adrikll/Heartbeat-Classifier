@@ -6,23 +6,24 @@ import numpy as np
 from sklearn.ensemble import StackingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
+from scikeras.wrappers import KerasClassifier
 from sklearn.metrics import accuracy_score, classification_report
 from tensorflow.keras.utils import to_categorical
 
 import config
 from dataloader import load_and_prepare_data
+from models.neural_networks import create_cnn
 from utils import plot_confusion_matrix, plot_roc_curves, CLASSES
 
-def train_final_ensemble():
+def train_ensemble():
     """
-    Script final que carrega os melhores hiperparâmetros já otimizados
-    e treina o modelo de Stacking.
+    Treina e avalia um modelo de Stacking, combinando
+    modelos de árvores com uma Rede Neural Convolucional (CNN).
     """
-    MODEL_NAME = 'Stacking_Ensemble_Final'
+    MODEL_NAME = 'Stacking_Ensemble_RF_XGB_CNN'
 
     #Carregar Dados e Hiperparâmetros Otimizados
     print("\nCarregando dados e melhores hiperparâmetros...")
-
     (X_train, y_train), (X_val, y_val), (X_test, y_test) = load_and_prepare_data()
 
     try:
@@ -31,49 +32,67 @@ def train_final_ensemble():
         print("Hiperparâmetros otimizados carregados com sucesso.")
     except FileNotFoundError:
         print(f"ERRO: Arquivo '{config.BEST_PARAMS_FILE}' não encontrado.")
-        print("Por favor, execute o script '1_optimize_hyperparameters.py' primeiro para gerar este arquivo.")
         return
 
-    #Construção do Modelo Stacking com os Melhores Parâmetros
-    print("\nConstruindo o modelo Stacking com os melhores estimadores...")
+    #Construir o Modelo Stacking Diverso
+    print("\nConstruindo o modelo Stacking diverso")
 
+    #Carregar os melhores parâmetros do arquivo JSON
     params_rf = best_params.get('RandomForest')
     params_xgb = best_params.get('XGBoost')
+    params_cnn = best_params.get('CNN')
 
-    if not params_rf or not params_xgb:
-        print("ERRO: Hiperparâmetros para RandomForest ou XGBoost não encontrados no arquivo JSON.")
+    if not all([params_rf, params_xgb, params_cnn]):
+        print("ERRO: Hiperparâmetros para RandomForest, XGBoost ou CNN não encontrados no arquivo JSON.")
         return
 
+    #Cria a lista de estimadores de base
     base_estimators = [
         ('rf', RandomForestClassifier(random_state=config.RANDOM_STATE, class_weight='balanced', n_jobs=1, **params_rf)),
-        ('xgb', XGBClassifier(random_state=config.RANDOM_STATE, eval_metric='mlogloss', n_jobs=1, **params_xgb))
+        ('xgb', XGBClassifier(random_state=config.RANDOM_STATE, eval_metric='mlogloss', n_jobs=1, **params_xgb)),
+        ('cnn', KerasClassifier(
+            model=create_cnn,
+            optimizer=params_cnn.get('optimizer'),
+            loss="sparse_categorical_crossentropy",
+            epochs=params_cnn.get('epochs'),
+            batch_size=params_cnn.get('batch_size'),
+            class_weight=None, 
+            verbose=0
+        ))
     ]
 
-    #definição do meta-modelo
+    #Meta-modelo
     meta_model = LogisticRegression(max_iter=1000, n_jobs=1)
 
-    #cria classificador Stacking
+    #Cria o classificador Stacking final
     stacking_model = StackingClassifier(
-        estimators=base_estimators, final_estimator=meta_model, cv=5, n_jobs=1
+        estimators=base_estimators,
+        final_estimator=meta_model,
+        cv=3,  
+        n_jobs=1, 
+        passthrough=True #permite que o meta-modelo veja as features originais, além das previsões
     )
-    print("Modelo Stacking construído.")
+    print("Modelo Stacking construído com sucesso.")
 
-    #treinamento
-    print("\nTreinando o modelo Stacking...")
+    #Treinamento
+    print("\nTreinando o modelo Stacking... ")
     start_time = time.time()
     stacking_model.fit(X_train, y_train)
     end_time = time.time()
     print(f"Treinamento concluído em {(end_time - start_time):.2f} segundos.")
 
-    #avaliação
-    print("\nAvaliando o modelo...")
+    #Avaliação
+    print("\nAvaliando o modelo e gerando relatórios...")
+    
     model_output_dir = os.path.join(config.OUTPUT_DIR, MODEL_NAME)
     if not os.path.exists(model_output_dir):
         os.makedirs(model_output_dir)
 
+    #Predições
     y_pred_probs = stacking_model.predict_proba(X_test)
     y_pred = np.argmax(y_pred_probs, axis=1)
 
+    #Plots
     plot_confusion_matrix(y_test, y_pred, MODEL_NAME, model_output_dir)
     y_test_one_hot = to_categorical(y_test, num_classes=config.NUM_CLASSES)
     plot_roc_curves(y_test_one_hot, y_pred_probs, MODEL_NAME, model_output_dir)
@@ -84,8 +103,10 @@ def train_final_ensemble():
     print(f"Acurácia no Teste: {accuracy:.4f}")
     print(classification_report(y_test, y_pred, target_names=CLASSES))
     
+    #salva o modelo
     model_save_path = os.path.join(model_output_dir, "final_ensemble_model.joblib")
     joblib.dump(stacking_model, model_save_path)
+    print(f"Modelo Ensemble final salvo em: {model_save_path}")
 
 if __name__ == '__main__':
-    train_final_ensemble()
+    train_ensemble()
