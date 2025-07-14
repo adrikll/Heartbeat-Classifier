@@ -1,8 +1,9 @@
 Essa pipeline treina e avalia 4 modelos para classificação de 5 classes de batimentos cardíacos: 
 - Normal (0)
 - Supraventricular (1)
-- Ventricular (V)
-- Fusão (F)
+- Ventricular (2)
+- Fusão (3)
+- Desconhecido (4)
 
 O dataset está disponivel em: https://www.kaggle.com/datasets/shayanfazeli/heartbeat
 
