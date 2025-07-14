@@ -50,15 +50,15 @@ def optimize():
         search = RandomizedSearchCV(estimator=mp['model'], param_distributions=mp['params'], n_iter=config.N_ITER_SEARCH, cv=config.CV_FOLDS, verbose=2, random_state=config.RANDOM_STATE, n_jobs=1)
         search.fit(X_train, y_train)
         
-        #Coleta os melhores parâmetros
+        #coleta os melhores parâmetros
         best_params_all_models[model_name] = search.best_params_
         print(f"Melhores parâmetros para {model_name}: {search.best_params_}")
 
         optimization_results_path = os.path.join(config.OUTPUT_DIR, f"{model_name}_optimization_results.csv")
         pd.DataFrame(search.cv_results_).to_csv(optimization_results_path, index=False)
-        print(f"Resultados completos da otimização salvos em: {optimization_results_path}")
+        print(f"Resultados da otimização salvos em: {optimization_results_path}")
 
-    print("\nOtimização concluída! Salvando melhores parâmetros...")
+    print("\nOtimização concluída!")
     if not os.path.exists(config.OUTPUT_DIR):
         os.makedirs(config.OUTPUT_DIR)
 

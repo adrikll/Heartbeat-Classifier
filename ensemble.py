@@ -15,14 +15,24 @@ from dataloader import load_and_prepare_data
 from models.neural_networks import create_cnn
 from utils import plot_confusion_matrix, plot_roc_curves, CLASSES
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
 def train_ensemble():
     """
     Treina e avalia um modelo de Stacking, combinando
-    modelos de árvores com uma Rede Neural Convolucional (CNN).
+    o Random forest, XGBoost e CNN.
     """
     MODEL_NAME = 'Stacking_Ensemble_RF_XGB_CNN'
 
-    #Carregar Dados e Hiperparâmetros Otimizados
+    #carrega os dados e hiperparametros otimizados 
     print("\nCarregando dados e melhores hiperparâmetros...")
     (X_train, y_train), (X_val, y_val), (X_test, y_test) = load_and_prepare_data()
 
@@ -34,10 +44,8 @@ def train_ensemble():
         print(f"ERRO: Arquivo '{config.BEST_PARAMS_FILE}' não encontrado.")
         return
 
-    #Construir o Modelo Stacking Diverso
-    print("\nConstruindo o modelo Stacking diverso")
+    print("\nConstruindo o modelo Stacking diverso...")
 
-    #Carregar os melhores parâmetros do arquivo JSON
     params_rf = best_params.get('RandomForest')
     params_xgb = best_params.get('XGBoost')
     params_cnn = best_params.get('CNN')
@@ -46,7 +54,7 @@ def train_ensemble():
         print("ERRO: Hiperparâmetros para RandomForest, XGBoost ou CNN não encontrados no arquivo JSON.")
         return
 
-    #Cria a lista de estimadores de base
+    #cria a lista de estimadores de base
     base_estimators = [
         ('rf', RandomForestClassifier(random_state=config.RANDOM_STATE, class_weight='balanced', n_jobs=1, **params_rf)),
         ('xgb', XGBClassifier(random_state=config.RANDOM_STATE, eval_metric='mlogloss', n_jobs=1, **params_xgb)),
@@ -61,49 +69,60 @@ def train_ensemble():
         ))
     ]
 
-    #Meta-modelo
+    #meta-modelo
     meta_model = LogisticRegression(max_iter=1000, n_jobs=1)
 
-    #Cria o classificador Stacking final
+    #classificador Stacking final
     stacking_model = StackingClassifier(
         estimators=base_estimators,
         final_estimator=meta_model,
         cv=3,  
         n_jobs=1, 
-        passthrough=True #permite que o meta-modelo veja as features originais, além das previsões
+        passthrough=True
     )
-    print("Modelo Stacking construído com sucesso.")
+    print("Modelo Stacking construído.")
 
-    #Treinamento
+    #treinamento
     print("\nTreinando o modelo Stacking... ")
     start_time = time.time()
     stacking_model.fit(X_train, y_train)
     end_time = time.time()
     print(f"Treinamento concluído em {(end_time - start_time):.2f} segundos.")
 
-    #Avaliação
-    print("\nAvaliando o modelo e gerando relatórios...")
+    #avaliação
+    print("\nAvaliando o modelo...")
     
     model_output_dir = os.path.join(config.OUTPUT_DIR, MODEL_NAME)
     if not os.path.exists(model_output_dir):
         os.makedirs(model_output_dir)
 
-    #Predições
+    #predições
     y_pred_probs = stacking_model.predict_proba(X_test)
     y_pred = np.argmax(y_pred_probs, axis=1)
 
-    #Plots
+    #plots
     plot_confusion_matrix(y_test, y_pred, MODEL_NAME, model_output_dir)
     y_test_one_hot = to_categorical(y_test, num_classes=config.NUM_CLASSES)
     plot_roc_curves(y_test_one_hot, y_pred_probs, MODEL_NAME, model_output_dir)
-    print(f"Gráficos de análise salvos na pasta: {model_output_dir}")
+    print(f"Gráficos de análise salvos em: {model_output_dir}")
 
     accuracy = accuracy_score(y_test, y_pred)
-    print(f"\n--- Relatório Final para {MODEL_NAME} ---")
-    print(f"Acurácia no Teste: {accuracy:.4f}")
-    print(classification_report(y_test, y_pred, target_names=CLASSES))
+    report_str = classification_report(y_test, y_pred, target_names=CLASSES)
     
-    #salva o modelo
+    print(f"\nRelatório Final para {MODEL_NAME}----------------------------")
+    print(f"Acurácia no Teste: {accuracy:.4f}")
+    print(report_str)
+    
+    report_dict = classification_report(y_test, y_pred, target_names=CLASSES, output_dict=True)
+    report_json_path = os.path.join(model_output_dir, 'classification_report.json')
+    report_txt_path = os.path.join(model_output_dir, 'classification_report.txt')
+    
+    with open(report_json_path, 'w') as f:
+        json.dump(report_dict, f, cls=NpEncoder, indent=4)
+    with open(report_txt_path, 'w') as f:
+        f.write(f"Acurácia no Teste: {accuracy:.4f}\n\n")
+        f.write(report_str)
+    
     model_save_path = os.path.join(model_output_dir, "final_ensemble_model.joblib")
     joblib.dump(stacking_model, model_save_path)
     print(f"Modelo Ensemble final salvo em: {model_save_path}")

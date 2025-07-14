@@ -3,10 +3,12 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, Reshape, Input, Con
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 import config
+import sys
+import os
 
 def create_mlp(optimizer_name='adam', learning_rate=0.001):
     """
-    MLP com mais regularização para estabilizar o treinamento.
+    MLP com regularização.
     - BatchNormalization para estabilizar as ativações.
     - Regularização L2 para penalizar pesos grandes e evitar overfitting.
     """
@@ -32,8 +34,7 @@ def create_mlp(optimizer_name='adam', learning_rate=0.001):
 
 def create_cnn(optimizer_name='adam', learning_rate=0.001):
     """
-    CNN com regularização L2 adicionada para um controle de 
-    overfitting ainda mais fino.
+    CNN com regularização L2.
     """
     if optimizer_name == 'adam':
         optimizer = Adam(learning_rate=learning_rate)
@@ -71,3 +72,14 @@ def create_cnn(optimizer_name='adam', learning_rate=0.001):
     
     model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     return model
+
+if __name__ == "__main__":
+    print("Resumo do Modelo MLP----------------")
+    mlp_model = create_mlp()
+    mlp_model.summary()
+    print("\n")
+
+    print("Resumo do Modelo CNN----------------")
+    cnn_model = create_cnn()
+    cnn_model.summary()
+

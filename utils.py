@@ -11,7 +11,7 @@ def evaluate_and_compare_models(results, X_test, y_test):
     """
     Avalia os melhores modelos encontrados e gera um relatório comparativo.
     """
-    print("\n--- Avaliação Final no Conjunto de Teste ---")
+    print("\nAvaliação Final no Conjunto de Teste -----------")
     
     summary = []
     
@@ -34,7 +34,7 @@ def evaluate_and_compare_models(results, X_test, y_test):
         })
         
     summary_df = pd.DataFrame(summary)
-    print("\n--- Resumo Comparativo dos Modelos ---")
+    print("\nResumo Comparativo dos Modelos ----------")
     print(summary_df.to_string())
     
     summary_df.to_csv(f"{config.OUTPUT_DIR}resumo_comparativo.csv", index=False)

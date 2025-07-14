@@ -43,9 +43,8 @@ def train_and_evaluate():
     #treina e avalia cada modelo
     for model_name, params in best_params.items():
 
-        print(f"\n--- Processando modelo: {model_name} ---")
+        print(f"\nProcessando modelo: {model_name}-----------------------------------")
         
-        #cria um diretório de saída para este modelo
         model_output_dir = os.path.join(config.OUTPUT_DIR, model_name)
         if not os.path.exists(model_output_dir):
             os.makedirs(model_output_dir)
@@ -123,12 +122,7 @@ def train_and_evaluate():
         
         final_results.append({'Modelo': model_name, 'Acurácia Teste': accuracy})
 
-    #salva o resumo
-    summary_df = pd.DataFrame(final_results)
-    print("\nResumo Comparativo -----------------------------------------------------")
-    print(summary_df.to_string())
-    summary_df.to_csv(os.path.join(config.OUTPUT_DIR, 'resumo_final.csv'), index=False)
-    print(f"\nPipeline concluída!'{config.OUTPUT_DIR}'.")
+    print("Pipeline concluída!")
 
 if __name__ == '__main__':
     train_and_evaluate()
