@@ -1,4 +1,4 @@
-Essa pipeline treina e avalia 4 modelos para classificação de 5 classes de batimentos cardíacos: 
+Essa pipeline treina e avalia 4 modelos e um ensemble para classificação de 5 classes de batimentos cardíacos: 
 - Normal (0)
 - Supraventricular (1)
 - Ventricular (2)
